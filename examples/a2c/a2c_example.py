@@ -20,22 +20,20 @@ env_size = 1  # Options are 1,3,5,7,11
 env_name = f"botbowl-{env_size}"
 env_conf = EnvConf(size=env_size, pathfinding=False)
 
-
-make_agent_from_model = partial(A2CAgent, env_conf=env_conf, scripted_func=a2c_scripted_actions,
-                                exclude_pathfinding_moves=not env_conf.config.pathfinding_enabled)
+make_agent_from_model = partial(A2CAgent, env_conf=env_conf, scripted_func=a2c_scripted_actions)
 
 
 def make_env():
     env = BotBowlEnv(env_conf)
     if ppcg:
         env = PPCGWrapper(env)
-    env = ScriptedActionWrapper(env, scripted_func=a2c_scripted_actions)
+    # env = ScriptedActionWrapper(env, scripted_func=a2c_scripted_actions)
     env = RewardWrapper(env, home_reward_func=A2C_Reward())
     return env
 
 
 # Training configuration
-num_steps = 100000
+num_steps = 1000000
 num_processes = 8
 steps_per_update = 20
 learning_rate = 0.001
@@ -51,7 +49,7 @@ ppcg = False
 reset_steps = 5000  # The environment is reset after this many steps it gets stuck
 
 # Self-play
-selfplay = True  # Use this to enable/disable self-play
+selfplay = False  # Use this to enable/disable self-play
 selfplay_window = 1
 selfplay_save_steps = int(num_steps / 10)
 selfplay_swap_steps = selfplay_save_steps
