@@ -9,6 +9,7 @@ from botbowl.ai.bots.random_bot import RandomBot
 
 from botbowl.core.game import Game
 from botbowl.core.model import Action, ActionChoice
+from botbowl.core.table import ActionType
 
 
 class MctsBot(botbowl.Agent):
@@ -42,13 +43,21 @@ class MctsBot(botbowl.Agent):
             # Expand this node and set children accordingly.
             for a in self.game.state.available_actions:
                 # Create child
+                # if a.action_type == ActionType.PLACE_PLAYER:
+                #     continue
+                
+                if a.players == None:
+                    pass
+
                 for player in a.players:
-                    for pos in a.positions:
+                    sampled_pos = self.rnd.choice(a.positions, 5)
+                    for pos in sampled_pos:
                         game_copy = deepcopy(self.game)
                         action_taken = botbowl.Action(a.action_type, position=pos, player=player)
                         game_copy._one_step(action_taken)
                         # Flip step of other bot
-                        c = MctsBot.McNode(game_copy, action_taken, self.team, self.n_simulations, self.rnd)
+                        c = MctsBot.McNode(self.bot, game_copy, action_taken,self, self.team, self.rnd)
+                        c.playout()
                         self.children.append(c)
 
         def UCT(self) -> float:
@@ -63,13 +72,14 @@ class MctsBot(botbowl.Agent):
         def playout(self):
             self.bot.evals += 1
             self.simulated = True
+            self.n_simulations += 1
 
             # Randomly play out from this node onwards.
             # and store result in node.
             game_copy = deepcopy(self.game)
             while (not game_copy.state.game_over) and len(game_copy.state.available_actions) != 0:
                 a = self.select_random_action(game_copy)
-                game_copy.step(a)
+                game_copy._one_step(a)
 
             winner =  self.game.get_winning_team()
             if winner == self.team:
