@@ -4,7 +4,7 @@ from mcts_bot import *
 import botbowl as botbowl
 import time as time
 
-config = botbowl.load_config("web")
+config = botbowl.load_config("bot-bowl")
 config.competition_mode = False
 config.pathfinding_enabled = True
 config.debug_mode = False
