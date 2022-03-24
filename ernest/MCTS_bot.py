@@ -1,3 +1,4 @@
+from logging import root
 import botbowl
 from botbowl.core import Action, Agent
 import numpy as np
@@ -12,6 +13,9 @@ class Node:
         self.children = []
         self.action = action
         self.evaluations = []
+
+        self.n_wins = 0
+        self.n_simulations = 0
 
     def num_visits(self):
         return len(self.evaluations)
@@ -33,17 +37,40 @@ class SearchBot(botbowl.Agent):
     def new_game(self, game, team):
         self.my_team = team
 
-    def act(self, game):
+    def act(self, game: botbowl.core.game.Game):
         game_copy = deepcopy(game)
         game_copy.enable_forward_model()
         game_copy.home_agent.human = True
         game_copy.away_agent.human = True
-
         root_step = game_copy.get_step()
         root_node = Node()
+
+        available_actions = [elem.action_type for elem in game_copy.get_available_actions()]
+        print(available_actions)
+        input()
+
+        # handle heads or tail
+        if botbowl.ActionType.HEADS in available_actions or botbowl.ActionType.TAILS in available_actions:
+            return np.random.choice([Action(botbowl.ActionType.HEADS), Action(botbowl.ActionType.TAILS)])
+
+        # handle kick or receive
+        if botbowl.ActionType.KICK in available_actions or botbowl.ActionType.RECEIVE in available_actions:
+            return np.random.choice([Action(botbowl.ActionType.KICK), Action(botbowl.ActionType.RECEIVE)])
+
+        if botbowl.ActionType.PLACE_PLAYER in available_actions or botbowl.ActionType.END_SETUP in available_actions or botbowl.ActionType.SETUP_FORMATION_SPREAD in available_actions or botbowl.ActionType.SETUP_FORMATION_WEDGE in available_actions:
+            available_actions.remove(botbowl.ActionType.PLACE_PLAYER)
+            for elem in game_copy.get_players_on_pitch(team=self.my_team):
+                return Action(botbowl.ActionType.END_SETUP)
+            available_actions.remove(botbowl.ActionType.END_SETUP)
+            return Action(np.random.choice(available_actions))
+            
+
+
         for action_choice in game_copy.get_available_actions():
+            print(f'action_choice: {action_choice}')
             if action_choice.action_type == botbowl.ActionType.PLACE_PLAYER:
                 continue
+
             for player in action_choice.players:
                 root_node.children.append(Node(Action(action_choice.action_type, player=player), parent=root_node))
             for position in action_choice.positions:
@@ -51,8 +78,10 @@ class SearchBot(botbowl.Agent):
             if len(action_choice.players) == len(action_choice.positions) == 0:
                 root_node.children.append(Node(Action(action_choice.action_type), parent=root_node))
 
+        print(f'actions after : {root_node.children}')
+
         best_node = None
-        print(f"Evaluating {len(root_node.children)} nodes")
+        # print(f"Evaluating {len(root_node.children)} nodes")
         t = time.time()
         for node in root_node.children:
             game_copy.step(node.action)
@@ -66,12 +95,18 @@ class SearchBot(botbowl.Agent):
 
             game_copy.revert(root_step)
 
-        print(f"{best_node.action.action_type} selected in {time.time() - t} seconds")
-
+        # print(f"{best_node.action.action_type} selected in {time.time() - t} seconds")
+        print(f"best action : {best_node.action}")
+        input()
         return best_node.action
 
-    def _evaluate(self, game):
+    def _evaluate(self, game: botbowl.core.game.Game):
+        print('last action', game.last_action_time)
+
+
         return random.random()
+
+        # return (self.n_wins / self.n_simulations) + (0.1 * np.sqrt(np.log(self.parent.n_simulations) / self.n_simulations)) 
 
     def end_game(self, game):
         pass
