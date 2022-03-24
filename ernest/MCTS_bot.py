@@ -89,7 +89,7 @@ class SearchBot(botbowl.Agent):
         # handle kick or receive
         if botbowl.ActionType.KICK in available_actions or botbowl.ActionType.RECEIVE in available_actions:
             # return np.random.choice([Action(botbowl.ActionType.KICK), Action(botbowl.ActionType.RECEIVE)])
-            return Action(botbowl.ActionType.KICK)
+            return Action(botbowl.ActionType.KICK) # TODO remove 
 
 
         if botbowl.ActionType.PLACE_PLAYER in available_actions or botbowl.ActionType.END_SETUP in available_actions or botbowl.ActionType.SETUP_FORMATION_SPREAD in available_actions or botbowl.ActionType.SETUP_FORMATION_WEDGE in available_actions:
@@ -105,7 +105,7 @@ class SearchBot(botbowl.Agent):
 
         for i in range(self.budget):
             node: Node = root_node.extract_children(game_copy)
-            
+
 
 
                 
