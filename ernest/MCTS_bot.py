@@ -6,6 +6,7 @@ import random
 import time
 
 PRINT = False
+IGNORE_IN_GAME = [botbowl.ActionType.PLACE_PLAYER, botbowl.ActionType.END_SETUP, botbowl.ActionType.SETUP_FORMATION_SPREAD, botbowl.ActionType.SETUP_FORMATION_LINE, botbowl.ActionType.SETUP_FORMATION_WEDGE, botbowl.ActionType.SETUP_FORMATION_ZONE]
 
 class Node:
     def __init__(self, action=None, parent=None, C=2):
@@ -26,19 +27,11 @@ class Node:
         else:
             return float('inf')
 
-    def num_visits(self):
-        return len(self.evaluations)
-
-    def visit(self, score):
-        self.evaluations.append(score)
-
-    def score(self):
-        return np.average(self.evaluations)
 
     def extract_children(self, game: botbowl.Game):
         for action_choice in game.get_available_actions():
-            if action_choice == botbowl.ActionType.PLACE_PLAYER:
-                print(action_choice)
+            print(action_choice)
+            if action_choice.action_type in IGNORE_IN_GAME:
                 continue
 
             for player in action_choice.players:
@@ -49,32 +42,26 @@ class Node:
                 self.children.append(Node(Action(action_choice.action_type), parent=self))
         return self
 
-    def expand(self, game):
-        game.step()
-
 class SearchBot(botbowl.Agent):
-
-    def __init__(self, name, budget=100, seed=None):
+    def __init__(self, name, budget=1000, seed=None):
         super().__init__(name)
         self.my_team = None
         self.budget = budget
-        self.rnd = np.random.RandomState(seed)
         self.path = []
 
     def new_game(self, game, team):
         self.my_team = team
 
+    def end_game(self, game):
+        pass
 
     def selection(self, node: Node) -> Node:
-        best_node = node.children[np.argmax([n.UTC(node) for n in node.children])]
-        return best_node
+        return node.children[np.argmax([n.UTC(node) for n in node.children])]
 
     def rollout(self, game: botbowl.game.Game, node: Node):
         step_before_rollout = game.get_step()
         if PRINT:
-            print(f'condition 1: {not game.state.game_over and len(node.children) == 0}')
-        action = None
-        
+            print(f'condition 1: {not game.state.game_over and len(node.children) == 0}')        
         while not game.state.game_over and len(node.children) == 0:
             action = np.random.choice(node.extract_children(game).children).action
             if PRINT:
@@ -163,6 +150,7 @@ class SearchBot(botbowl.Agent):
             return Action(np.random.choice(available_actions))
 
         root_node.extract_children(game=game_copy)
+        start = time.time()
 
         for i in range(self.budget):
             # selection of node
@@ -232,20 +220,8 @@ class SearchBot(botbowl.Agent):
         # print(f"best action : {best_node.action}")
 
 
-    def _evaluate(self, game: botbowl.Game):
-        print('last action', game.last_action_time)
-
-
-        return random.random()
-
-        # return (self.n_wins / self.n_simulations) + (0.1 * np.sqrt(np.log(self.parent.n_simulations) / self.n_simulations)) 
-
-    def end_game(self, game):
-        pass
-
-
 # Register the bot to the framework
-botbowl.register_bot('search-bot', SearchBot)
+botbowl.register_bot('MCTS-bot', SearchBot)
 
 if __name__ == '__main__':
     # Load configurations, rules, arena and teams

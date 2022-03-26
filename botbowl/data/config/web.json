@@ -17,8 +17,8 @@
     "defensive_formations": ["def_spread.txt"],
     "offensive_formations": ["off_wedge.txt"],
     "time_limits": {
-        "game": 15360000,
-        "turn": 24000,
+        "game": 15360,
+        "turn": 240,
         "secondary": 20,
         "disqualification": 1000,
         "init": 10,
