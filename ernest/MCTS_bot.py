@@ -37,6 +37,10 @@ class Node:
 
     def extract_children(self, game: botbowl.Game):
         for action_choice in game.get_available_actions():
+            if action_choice == botbowl.ActionType.PLACE_PLAYER:
+                print(action_choice)
+                continue
+
             for player in action_choice.players:
                 self.children.append(Node(Action(action_choice.action_type, player=player), parent=self))
             for position in action_choice.positions:
@@ -68,13 +72,14 @@ class SearchBot(botbowl.Agent):
     def rollout(self, game: botbowl.game.Game, node: Node):
         step_before_rollout = game.get_step()
         if PRINT:
-            print(f'condition 1: {not game.state.game_over and len(game.state.available_actions) != 0}')
+            print(f'condition 1: {not game.state.game_over and len(node.children) == 0}')
         action = None
         
         while not game.state.game_over and len(node.children) == 0:
             action = np.random.choice(node.extract_children(game).children).action
             if PRINT:
                 print('---------------->', action)
+            
             game.step(action)
 
         win = game.get_winner()
