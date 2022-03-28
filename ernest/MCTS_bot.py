@@ -30,10 +30,6 @@ class Node:
 
     def extract_children(self, game: botbowl.Game):
         for action_choice in game.get_available_actions():
-            # print(action_choice)
-            if action_choice.action_type in IGNORE_IN_GAME:
-                continue
-
             for player in action_choice.players:
                 self.children.append(Node(Action(action_choice.action_type, player=player), parent=self))
             for position in action_choice.positions:
@@ -43,7 +39,7 @@ class Node:
         return self
 
 class SearchBot(botbowl.Agent):
-    def __init__(self, name, budget=1000, time_budget=5, seed=None):
+    def __init__(self, name, budget=200, time_budget=5, seed=None):
         super().__init__(name)
         self.my_team = None
         self.budget = budget
@@ -51,24 +47,27 @@ class SearchBot(botbowl.Agent):
         self.path = []
 
     def new_game(self, game, team):
+        print("NEW GAME woop woop")
         self.my_team = team
 
-    def end_game(self, game):
+    def end_game(self, game: botbowl.Game):
+        # game._end_game()
+        print("END GAME")
         pass
 
     def selection(self, node: Node) -> Node:
         return node.children[np.argmax([n.UTC(node) for n in node.children])]
 
-    def rollout(self, game: botbowl.game.Game, node: Node):
+    def rollout(self, game: botbowl.Game, node: Node):
         step_before_rollout = game.get_step()
         if PRINT:
             print(f'condition 1: {not game.state.game_over and len(node.children) == 0}')        
         while not game.state.game_over and len(node.children) == 0:
             action = np.random.choice(node.extract_children(game).children).action
-            if PRINT:
-                print('---------------->', action)
-            
-            game.step(action)
+            # if True:
+            #     print('---------------->', action)
+            if action.action_type != botbowl.ActionType.PLACE_PLAYER:
+                game.step(action)
 
         win = game.get_winner()
         if PRINT:
@@ -111,9 +110,8 @@ class SearchBot(botbowl.Agent):
         root_node = Node()
 
         available_actions = [elem.action_type for elem in game_copy.get_available_actions()]
-        if True:
+        if PRINT:
             print(available_actions)
-        # input()
 
         # if we only have one action, return it, no need to choose what the best action can be
         # if len(available_actions) == 1:
@@ -124,11 +122,7 @@ class SearchBot(botbowl.Agent):
             if available_actions[0] == botbowl.ActionType.PLACE_BALL:
                 if PRINT:
                     print(f'positions: {game_copy.get_available_actions()[0].positions}')
-                player_pos = [player.position.x for player in game.get_players_on_pitch(team=self.my_team)]
-                if game.is_home_team(team=self.my_team):
-                    return Action(botbowl.ActionType.PLACE_BALL, position=botbowl.Square(random.randint(1,8), random.randint(1,9)))
-                else:
-                    return Action(botbowl.ActionType.PLACE_BALL, position=botbowl.Square(random.randint(9,16), random.randint(1,9)))
+                return Action(botbowl.ActionType.PLACE_BALL, position=np.random.choice(game.get_available_actions()[0].positions))
             # else:
             #     print(f'single action is: {available_actions[0]}')
             #     input()
@@ -153,8 +147,8 @@ class SearchBot(botbowl.Agent):
         root_node.extract_children(game=game_copy)
         start = time.time()
 
-        # for i in range(self.budget):
-        while time.time() - start < self.time_budget:
+        for i in range(self.budget):
+        # while time.time() - start < self.time_budget:
             # selection of node
             node = self.selection(root_node)
             self.path = [root_node]
@@ -168,61 +162,12 @@ class SearchBot(botbowl.Agent):
                     self.expand(game=game_copy, node=node)
                     node = self.selection(node)
 
-                if time.time() - start >= self.time_budget:
-                    break
+                # if time.time() - start >= self.time_budget:
+                #     break
             
             game_copy.revert(root_step)
 
         return root_node.children[np.argmax([n.n_wins for n in root_node.children])].action
-
-            
-            
-            # for action_choice in game_copy.get_available_actions():
-            #     for player in action_choice.players:
-            #         root_node.children.append(Node(Action(action_type=action_choice.action_type, player=player), parent=root_node))
-            #     for position in action_choice.positions:
-            #         root_node.children.append(Node(Action(action_type=action_choice.action_type, position=position), parent=root_node))
-            #     if len(action_choice.players) == len(action_choice.positions) == 0:
-            #         print(f'action with no player and no position : {action_choice}')
-            
-
-
-
-        # for action_choice in game_copy.get_available_actions():
-        #     print(f'action_choice: {action_choice}')
-        #     if action_choice.action_type == botbowl.ActionType.PLACE_PLAYER:
-        #         continue
-
-        #     for player in action_choice.players:
-        #         root_node.children.append(Node(Action(action_choice.action_type, player=player), parent=root_node))
-        #     for position in action_choice.positions:
-        #         root_node.children.append(Node(Action(action_choice.action_type, position=position), parent=root_node))
-        #     if len(action_choice.players) == len(action_choice.positions) == 0:
-        #         root_node.children.append(Node(Action(action_choice.action_type), parent=root_node))
-
-        # # print(f'actions after : {root_node.children}')
-
-
-        # best_node = None
-        # # print(f"Evaluating {len(root_node.children)} nodes")
-        # t = time.time()
-        # # for _ in range(self.budget):
-
-
-        # for node in root_node.children:
-        #     game_copy.step(node.action)
-        #     while not game.state.game_over and len(game.state.available_actions) == 0:
-        #         game_copy.step()
-        #     score = self._evaluate(game)
-        #     node.visit(score)
-        #     print(f"{node.action.action_type}: {node.score()}")
-        #     if best_node is None or node.score() > best_node.score():
-        #         best_node = node
-
-        #     game_copy.revert(root_step)
-
-        # # print(f"{best_node.action.action_type} selected in {time.time() - t} seconds")
-        # print(f"best action : {best_node.action}")
 
 
 # Register the bot to the framework
@@ -241,10 +186,10 @@ if __name__ == '__main__':
     config.pathfinding_enabled = False
 
     # Play a game
-    bot_a = botbowl.make_bot("search-bot")
-    bot_b = botbowl.make_bot("search-bot")
+    bot_a = botbowl.make_bot("MCTS-bot")
+    bot_b = botbowl.make_bot("MCTS-bot")
     game = botbowl.Game(1, home, away, bot_a, bot_b, config, arena=arena, ruleset=ruleset)
     print("Starting game")
     game.init()
-    print(game.get_winner())
+    print('Winner is:', game.get_winner())
     print("Game is over")
