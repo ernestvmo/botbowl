@@ -30,7 +30,7 @@ class Node:
 
     def extract_children(self, game: botbowl.Game):
         for action_choice in game.get_available_actions():
-            print(action_choice)
+            # print(action_choice)
             if action_choice.action_type in IGNORE_IN_GAME:
                 continue
 
@@ -43,10 +43,11 @@ class Node:
         return self
 
 class SearchBot(botbowl.Agent):
-    def __init__(self, name, budget=1000, seed=None):
+    def __init__(self, name, budget=1000, time_budget=5, seed=None):
         super().__init__(name)
         self.my_team = None
         self.budget = budget
+        self.time_budget = time_budget
         self.path = []
 
     def new_game(self, game, team):
@@ -110,7 +111,7 @@ class SearchBot(botbowl.Agent):
         root_node = Node()
 
         available_actions = [elem.action_type for elem in game_copy.get_available_actions()]
-        if PRINT:
+        if True:
             print(available_actions)
         # input()
 
@@ -152,7 +153,8 @@ class SearchBot(botbowl.Agent):
         root_node.extract_children(game=game_copy)
         start = time.time()
 
-        for i in range(self.budget):
+        # for i in range(self.budget):
+        while time.time() - start < self.time_budget:
             # selection of node
             node = self.selection(root_node)
             self.path = [root_node]
@@ -165,6 +167,9 @@ class SearchBot(botbowl.Agent):
                 else:
                     self.expand(game=game_copy, node=node)
                     node = self.selection(node)
+
+                if time.time() - start >= self.time_budget:
+                    break
             
             game_copy.revert(root_step)
 
