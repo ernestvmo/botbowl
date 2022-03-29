@@ -144,8 +144,12 @@ class SearchBot(botbowl.Agent):
             available_actions.remove(botbowl.ActionType.END_SETUP)
             return Action(np.random.choice(available_actions))
 
+        # If the ball is on ground, pick it up if the action is allowed with a random player
         if game_copy.get_ball_carrier() is None and game_copy.get_ball().on_ground and botbowl.ActionType.MOVE in available_actions: 
-            return Action(botbowl.ActionType.MOVE, game_copy.get_ball().position, player=np.random.choice(game_copy.get_players_on_pitch(team=self.my_team)))
+            pick_up_action = Action(botbowl.ActionType.MOVE, game_copy.get_ball().position, player=np.random.choice(game_copy.get_players_on_pitch(team=self.my_team)))
+            if game_copy._is_action_allowed(pick_up_action):
+                return pick_up_action
+
 
         root_node.extract_children(game=game_copy)
         start = time.time()
