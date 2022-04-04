@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-from MCTS_bot import *
+# from MCTS_bot import *
+from MCTS_bot_updated import *
 
 import botbowl.web.server as server
 
