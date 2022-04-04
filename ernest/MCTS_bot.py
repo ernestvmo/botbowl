@@ -5,6 +5,8 @@ from copy import deepcopy
 import random
 import time
 
+from botbowl.core.model import Team
+
 PRINT = False
 IGNORE_IN_GAME = [botbowl.ActionType.PLACE_PLAYER, botbowl.ActionType.END_SETUP, botbowl.ActionType.SETUP_FORMATION_SPREAD, botbowl.ActionType.SETUP_FORMATION_LINE, botbowl.ActionType.SETUP_FORMATION_WEDGE, botbowl.ActionType.SETUP_FORMATION_ZONE]
 
@@ -19,7 +21,6 @@ class Node:
 
         self.n_wins = 0
         self.n_sims = 0
-
 
     def UTC(self, root):
         if self.n_sims != 0:
@@ -45,6 +46,7 @@ class SearchBot(botbowl.Agent):
         self.budget = budget
         self.time_budget = time_budget
         self.path = []
+        self.last_action = None
 
     def new_game(self, game, team):
         print("NEW GAME woop woop")
@@ -144,6 +146,10 @@ class SearchBot(botbowl.Agent):
             available_actions.remove(botbowl.ActionType.END_SETUP)
             return Action(np.random.choice(available_actions))
 
+        if game.get_ball().on_ground and botbowl.ActionType.MOVE in available_actions and self.last_action == botbowl.ActionType.START_MOVE:
+            return Action(botbowl.ActionType.MOVE, game.get_ball().position, \
+                player=np.random.choice(game.get_players_on_pitch(team=self.my_team)))
+
         root_node.extract_children(game=game_copy)
         start = time.time()
 
@@ -167,7 +173,8 @@ class SearchBot(botbowl.Agent):
             
             game_copy.revert(root_step)
 
-        return root_node.children[np.argmax([n.n_wins for n in root_node.children])].action
+        self.last_action = root_node.children[np.argmax([n.n_wins for n in root_node.children])].action
+        return self.last_action
 
 
 # Register the bot to the framework
