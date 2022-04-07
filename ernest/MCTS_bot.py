@@ -224,8 +224,10 @@ class SearchBot(botbowl.Agent):
 
         # when the ball is on the floor, the bot will attemps to go pick it up
         if game.get_ball().on_ground and botbowl.ActionType.MOVE in available_actions and self.last_action == botbowl.ActionType.START_MOVE:
-            return botbowl.Action(botbowl.ActionType.MOVE, game.get_ball().position, \
+            pick_up_action = botbowl.Action(botbowl.ActionType.MOVE, game.get_ball().position, \
                 player=np.random.choice(game.get_players_on_pitch(team=self.my_team)))
+            if game_copy._is_action_allowed(pick_up_action):
+                return pick_up_action
 
         root_node.extract_children(game=game_copy)
 
