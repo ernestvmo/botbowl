@@ -1,9 +1,12 @@
 import botbowl
+
 import numpy as np
+
 from copy import deepcopy
 import time
 
 class Node:
+    '''Node element used in the Monte Carlo Tree search.'''
     def __init__(self, action=None, parent=None, C=2):
         """Initializer method for the Node class.
 
