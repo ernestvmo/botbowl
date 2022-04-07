@@ -211,8 +211,7 @@ class SearchBot(botbowl.Agent):
 
         # handle kick or receive
         if botbowl.ActionType.KICK in available_actions or botbowl.ActionType.RECEIVE in available_actions:
-            # return np.random.choice([botbowl.Action(botbowl.ActionType.KICK), botbowl.Action(botbowl.ActionType.RECEIVE)])
-            return botbowl.Action(botbowl.ActionType.KICK) # TODO remove 
+            return np.random.choice([botbowl.Action(botbowl.ActionType.KICK), botbowl.Action(botbowl.ActionType.RECEIVE)])
 
         # handle the action to setup the bot team
         if botbowl.ActionType.PLACE_PLAYER in available_actions or botbowl.ActionType.END_SETUP in available_actions or botbowl.ActionType.SETUP_FORMATION_SPREAD in available_actions or botbowl.ActionType.SETUP_FORMATION_WEDGE in available_actions:
