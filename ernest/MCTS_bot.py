@@ -13,7 +13,7 @@ class Node:
         Args:
             action (botbowl.Action, optional): Game action that lead to this state. Defaults to None.
             parent (Node, optional): Parent node of this node object. Defaults to None.
-            C (int, optional): C parameter to calculate the UTC scores of a node. Defaults to 2.
+            C (int, optional): C parameter to calculate the UCT scores of a node. Defaults to 2.
         """
         self.parent = parent
         self.children = []
@@ -25,14 +25,14 @@ class Node:
         self.n_wins = 0
         self.n_sims = 0
 
-    def UTC(self, root) -> float:
-        """ Calculate the UTC score of this node, using the passed parameter as root node of the tree.
+    def UCT(self, root) -> float:
+        """ Calculate the UCT score of this node, using the passed parameter as root node of the tree.
 
         Args:
             root (Node): The root Node of the tree.
 
         Returns:
-            float: if the node has been visited, calculate the UTC score of that node, otherwise return 'inf'.
+            float: if the node has been visited, calculate the UCT score of that node, otherwise return 'inf'.
         """
         if self.n_sims != 0:
             return self.n_wins / self.n_sims + self.C * (np.sqrt(np.log(root.n_sims) / self.n_sims))
@@ -93,15 +93,16 @@ class SearchBot(botbowl.Agent):
         game._end_game()
 
     def selection(self, node: Node) -> Node:
-        """Selection operation of the Monte Carlo Tree Search. Using argmax, returns the Node with the highest UTC score of the passed Node parameter.
+        """Selection operation of the Monte Carlo Tree Search. Using argmax, returns the Node with the highest UCT score of the passed Node parameter.
 
         Args:
             node (Node): The Node object we want to select the children of.
 
         Returns:
-            Node: The node object with the highest UTC score out of all the available children.
+            Node: The node object with the highest UCT score out of all the available children.
         """
-        return node.children[np.argmax([n.UTC(node) for n in node.children])]
+        return node.children[np.argmax([n.UCT(node) for n in node.children])]
+
 
     def rollout(self, game: botbowl.Game, node: Node):
         """Rollout operation of the Monte Carlo Tree Search.
