@@ -72,6 +72,11 @@ class SearchBot(botbowl.Agent):
         super().__init__(name)
         self.my_team = None
 
+        # rollout scores values
+        self.DRAW = -1
+        self.LOSS = -5
+        self.WIN = 10
+
         self.budget = budget
         self.time_budget = time_budget
 
@@ -84,13 +89,16 @@ class SearchBot(botbowl.Agent):
         # used for debugging errors
         self.debug = False
 
+
     def new_game(self, game: botbowl.Game, team: botbowl.Team):
         '''Creates a new game, assigning the passed team parameter as the team operated by the bot.'''
         self.my_team = team
 
+
     def end_game(self, game: botbowl.Game):
         '''Declares the end of a game.'''
         game._end_game()
+
 
     def selection(self, node: Node) -> Node:
         """Selection operation of the Monte Carlo Tree Search. Using argmax, returns the Node with the highest UCT score of the passed Node parameter.
@@ -133,13 +141,13 @@ class SearchBot(botbowl.Agent):
             print(f'winner: {win}')
         if win == None:
             # DRAW  -- no one won
-            score = -1 
+            score = self.DRAW 
         elif win == self:
             # WIN   -- the bot won
-            score = 10
+            score = self.WIN
         else:
             # LOST  -- the bot lost
-            score = -5  
+            score = self.LOSS
 
         # rollback the game state before we did the rollout
         game.revert(step_before_rollout) # not sure if necessary
